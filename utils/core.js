@@ -2,6 +2,11 @@ var _ = require('lodash');
 var fs = require('fs');
 var cgi = require('cgi');
 var path = require('path');
+var posix = require('posix');
+var access = require('unix-access');
+
+var SUID = 2048;
+var SGID = 1024;
 
 module.exports = function(app) {
   var self = {};
@@ -61,19 +66,50 @@ module.exports = function(app) {
     return function(req, res, next) {
       var script = path.resolve(app.get('root'), path.normalize(req.path).slice(1));
       var options = {
-        'cwd': app.get('root')
+        'cwd': app.get('root'),
+        'stderr': res
       };
 
-      if (sudo) {
-        options.uid = 501 || parseInt(req.user.passwd.uid);
-        options.gid = 20 || parseInt(req.user.passwd.gid);
-      }
+      fs.stat(script, function(err, stats) {
+        if (err || !stats) {
+          return next(err);
+        }
 
-      console.log("Running...", script);
+        if (sudo) {
+          // run as server: this should never happen externally
+        } else {
+          options.uid = parseInt(req.user.passwd.uid);
+          options.gid = parseInt(req.user.passwd.gid);
 
-      var handler = cgi(script, options);
-      
-      return handler(req, res, next);
+          // ensure file is executable to real user before suid/sgid check
+          var uid = process.getuid();
+          var gid = process.getgid();
+          var allow = false;
+
+          posix.setregid(options.gid);
+          posix.setreuid(options.uid);
+          
+          allow = access.sync(script, 'x');
+          
+          posix.setreuid(uid);
+          posix.setregid(gid);
+
+          if (!allow) {
+            return next("Access denied (" + stats.mode + ")");
+          }
+
+          if (stats.mode & SUID) {
+            options.uid = stats.uid;
+          }
+  
+          if (stats.mode & SGID) {
+            options.gid = stats.gid;
+          }
+        }
+
+        return cgi(script, options)(req, res, next);
+     });
+
     };
   };
 

@@ -32,8 +32,10 @@
     "morgan": "~1.3.0",
     "node-persist": "0.0.2",
     "oauth2-server": "^2.3.0",
+    "posix": "^2.0.0",
     "pwd": "0.0.4",
     "request": "^2.49.0",
-    "serve-favicon": "~2.1.3"
+    "serve-favicon": "~2.1.3",
+    "unix-access": "~0.1.1"
   }
 }

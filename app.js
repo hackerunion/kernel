@@ -32,6 +32,7 @@ app.set('storage', storage);
 app.set('system path', process.env.SYSTEM_PATH || '/sbin/');
 app.set('swap', process.env.SWAP || (path.resolve(app.get('root'), 'var/run/kernel')));
 app.set('passwd', process.env.PASSWD || (path.resolve(app.get('root'), 'etc/passwd.json')));
+app.set('init', process.env.INIT || (path.resolve(app.get('root'), 'bin/init')));
 app.set('trust proxy', 1) // trust first proxy, cookie-session
 
 switch(app.get('env')) {
@@ -50,7 +51,7 @@ var sbin = app.get('system path');
  * Install base middleware.
  */
 
-//app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use(favicon(__dirname + '/public/images/favicon.ico'));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -147,7 +148,7 @@ app.all(RegExp("^(?!" + sbin + ")"),
   app.auth.authorise(),
   app.oauth.authorise(),
   app.core.passwd(),
-  app.core.spawn(true));
+  app.core.spawn());
 
 /*
  * Testing views only visible during debugging
