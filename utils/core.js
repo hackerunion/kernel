@@ -1,12 +1,18 @@
 var _ = require('lodash');
 var fs = require('fs');
 var cgi = require('cgi');
+var etc = require('etc-passwd');
 var path = require('path');
 var posix = require('posix');
 var access = require('unix-access');
+var domain = require('domain');
 
 var SUID = 2048;
 var SGID = 1024;
+
+/*
+ * Nifty trick: the kernel delegates almost everything to the underlying *nix implementation.
+ */
 
 module.exports = function(app) {
   var self = {};
@@ -15,9 +21,62 @@ module.exports = function(app) {
     return self;
   };
 
-  self.readPasswd = function(cb) {
+  self.readInternalPasswd = function(cb) {
     fs.readFile(app.get('passwd'), 'utf8', function (err, data) {
       cb(err, err ? null : JSON.parse(data));
+    });
+  };
+  
+  self.readPasswd = function(cb) {
+    // TODO: optimize this
+    var dom = domain.create();
+    
+    return dom.on('error', function(err) {
+      return cb(err);
+
+    }).run(function() { 
+      etc.getUsers(function (err, users) {
+        if (err) {
+          return cb(err);
+        }
+  
+        etc.getShadows(function (err, shadows) {
+          if (err) {
+            return cb(err);
+          }
+  
+          var shadows = _.groupBy(shadows, function (s) { return s.toLowerCase(); });
+          
+          return cb(users.map(function(user) {
+            var username = user.username.toLowerCase();
+            var meta = null;
+  
+            // skip users without passwords
+            if (!shadows[username] || !shadows[username].password) {
+              return null;
+            }
+            
+            // extract extra details from comment field
+            try { 
+              meta = JSON.parse(user.comments);
+            } catch (e) {
+              meta = { 'info': user.comments, 'service': false };
+            }
+            
+            // Note: this effectively defines the internal "passwd" schema
+            return { 'username': username,
+                     'password':  shadows[username].password,
+                     'uid': user.uid,
+                     'gid': user.gid,
+                     'shell': user.shell,
+                     'home': user.home,
+                     'service': user.uid % 2,
+                     'uri': meta.uri || '',
+                     'info': meta.info || '',
+                     'service': meta.service || false };
+          }).filter(function (x) { return x; }));
+        });
+      });
     });
   };
     
@@ -106,8 +165,14 @@ module.exports = function(app) {
             options.gid = stats.gid;
           }
         }
-
-        return cgi(script, options)(req, res, next);
+        
+        var dom = domain.create();
+        
+        return dom.on('error', function(err) {
+          return next(err);
+        }).run(function() { 
+          return cgi(script, options)(req, res, next);
+        });
      });
 
     };

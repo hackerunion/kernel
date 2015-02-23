@@ -1,4 +1,4 @@
-var pass = require('pwd');
+var crypt = require('crypt3');
 
 module.exports = function(app) {
   var model = {};
@@ -190,16 +190,8 @@ module.exports = function(app) {
           if (noPass) {
             return callback(false, user);
           }
-
-          pass.hash(password, elem.password.salt, function(err, hash) {
-            if (elem.password.hash == hash) {
-              return callback(false, user);
-            }
-            
-            callback(false, false);
-          });
-          
-          return;
+	        
+          return callback(false, (crypt(password, elem.password) === password) ? user : false);
         }
       }
   

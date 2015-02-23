@@ -5,7 +5,8 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "boot": "node ./bin/boot.js",
+    "debug": "DEBUG=kernel node ./bin/boot.js"
   },
   "repository": {
     "type": "git",
@@ -23,8 +24,10 @@
     "cgi": "hackerunion/node-cgi",
     "cookie-parser": "~1.3.3",
     "cookie-session": "^1.1.0",
+    "crypt3": "^0.1.7",
     "crypto": "0.0.3",
     "debug": "~2.0.0",
+    "etc-passwd": "^0.1.1",
     "express": "^4.10.0",
     "jade": "~1.6.0",
     "less-middleware": "1.0.x",
@@ -33,9 +36,9 @@
     "node-persist": "0.0.2",
     "oauth2-server": "^2.3.0",
     "posix": "^2.0.0",
-    "pwd": "0.0.4",
     "request": "^2.49.0",
     "serve-favicon": "~2.1.3",
+    "shelljs": "^0.3.0",
     "unix-access": "~0.1.1"
   }
 }
