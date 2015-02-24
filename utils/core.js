@@ -60,7 +60,7 @@ module.exports = function(app) {
             try { 
               meta = JSON.parse(user.comments);
             } catch (e) {
-              meta = { 'info': user.comments, 'service': false };
+              meta = { 'info': user.comments, 'uri': '', 'service': false };
             }
             
             // Note: this effectively defines the internal "passwd" schema
