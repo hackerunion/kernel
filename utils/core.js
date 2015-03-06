@@ -4,7 +4,6 @@ var cgi = require('cgi');
 var etc = require('etc-passwd');
 var path = require('path');
 var posix = require('posix');
-var access = require('unix-access');
 var domain = require('domain');
 
 var SUID = 2048;
@@ -148,7 +147,7 @@ module.exports = function(app) {
           posix.setregid(options.gid);
           posix.setreuid(options.uid);
           
-          allow = access.sync(script, 'x');
+          allow = fs.accessSync(script, FS.X_OK);
           
           posix.setreuid(uid);
           posix.setregid(gid);

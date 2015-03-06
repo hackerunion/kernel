@@ -32,7 +32,7 @@ app.set('storage', storage);
 app.set('system path', process.env.SYSTEM_PATH || '/sbin/');
 app.set('swap', process.env.SWAP || (path.resolve(app.get('root'), 'var/run/kernel')));
 app.set('passwd', process.env.PASSWD || (path.resolve(app.get('root'), 'etc/passwd.json')));
-app.set('init', process.env.INIT || (path.resolve(app.get('root'), 'etc/init.json')));
+app.set('init', process.env.INIT || (path.resolve(app.get('root'), 'sbin/init')));
 app.set('trust proxy', 1) // trust first proxy, cookie-session
 
 switch(app.get('env')) {

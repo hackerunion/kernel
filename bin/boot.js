@@ -14,9 +14,9 @@ if (cluster.isMaster) {
   
   // initialize the server (blocking)
   var system = init(app);
-  var err = system.boot();
-
-  if (err) {
+  var up = system.boot();
+  
+  if (!up) {
     console.error("PANIC: " + err);
     return process.exit(1);
   }
