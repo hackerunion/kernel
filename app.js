@@ -21,7 +21,6 @@ var app = express();
 
 app.set('port', process.env.PORT || 3000);
 app.set('uri', process.env.URI || ('http://localhost:' + app.get('port')));
-app.set('password', process.env.PASSWORD || 'password');
 app.set('cookie secret', process.env.COOKIE_SECRET || 'unsafe');
 app.set('root', process.env.ROOT || path.resolve(__dirname, '../../..') );
 app.set('root uid', process.env.ROOT_UID || '1');
