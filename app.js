@@ -140,6 +140,23 @@ app.post(sbin + 'auth',
 );
 
 /*
+ * Halt the server (necessary to sync).
+ */
+
+app.get(sbin + 'shutdown', function(req, res) {
+  var down = 1;//app.get('bios').halt();
+  
+  if (!down) {
+    console.error("HALT: " + err);
+    return res.sendStatus(500);
+  }
+  
+  res.sendStatus(200);
+  
+  return process.kill(process.pid, 'SIGKILL');
+});
+
+/*
  * CGI access to the server.
  */
 

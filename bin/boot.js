@@ -5,7 +5,7 @@ var debug = require('debug')('kernel');
 var cluster = require('cluster');
 
 var app = require('../app');
-var init = require('../init');
+var bios = require('../init')(app);
 
 if (cluster.isMaster) {
   if (process.getuid()) {
@@ -13,8 +13,7 @@ if (cluster.isMaster) {
   }
   
   // initialize the server (blocking)
-  var system = init(app);
-  var up = system.boot();
+  var up = bios.boot();
   
   if (!up) {
     console.error("PANIC: " + err);
@@ -25,6 +24,12 @@ if (cluster.isMaster) {
   cluster.fork();
   
   cluster.on('exit', function(s) {
+    if (s.process.signalCode == 'SIGKILL') {
+      console.warn("Shutdown received. Stopping...");
+      cluster.disconnect();
+      return;
+    }
+
     console.warn("Server (" + s.id + ") died. Restarting...");
     cluster.fork();
   });

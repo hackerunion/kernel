@@ -7,6 +7,7 @@ module.exports = function(app) {
   var self = {};
 
   self._init = function() {
+    app.set('bios', self);
     return self;
   };
 
@@ -15,7 +16,7 @@ module.exports = function(app) {
     
     var ret = $.exec(app.get('init') + " boot");
 
-    debug(ret.code ? ("[fail:" + ret.code + "]") : "[ok]", ret.output);
+    debug(ret.code ? ("[fail:" + ret.code + "]") : "[ok]");
     return ret && !ret.code;
   };
 
@@ -24,7 +25,7 @@ module.exports = function(app) {
 
     var ret = $.exec(app.get('init') + " halt");
 
-    debug(ret.code ? ("[fail:" + ret.code + "]") : "[ok]", ret.output);
+    debug(ret.code ? ("[fail:" + ret.code + "]") : "[ok]");
     return ret && !ret.code;
   };
   
