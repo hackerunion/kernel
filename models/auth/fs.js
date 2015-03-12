@@ -147,7 +147,7 @@ module.exports = function(app) {
   model.getUser = function (username, password, callback, noPass, byId) {
     // allow querying by other fields (namely uid)
     var field = byId ? 'uid' : 'username';
-    console.log("getUser", username, password, noPass, byId);
+
     app.core.readPasswd(function(err, passwd) {
       if (err) {
         return callback(false, false);

@@ -84,7 +84,7 @@ module.exports = function(app) {
   		var passwd = _.find(data || [], { 'username': username.toLowerCase() });
   
   		if (!passwd) {
-  			return cb("User not found");
+  			return cb("User not found: " + username);
   		}
   
   		cb(null, passwd);
@@ -96,7 +96,7 @@ module.exports = function(app) {
   		var passwd = _.find(data || [], { 'uid': uid });
   
   		if (!passwd) {
-  			return cb("User not found");
+  			return cb("UID not found: " + uid);
   		}
   
   		cb(null, passwd);
@@ -111,7 +111,7 @@ module.exports = function(app) {
   
       self.readPasswdForUID(req.user.id, function(err, passwd) {
         if (err || !passwd) {
-          return next("User not found");
+          return next("UID not found: " + req.user.id);
         }
         
         req.user.passwd = passwd;
@@ -142,12 +142,17 @@ module.exports = function(app) {
           // ensure file is executable to real user before suid/sgid check
           var uid = process.getuid();
           var gid = process.getgid();
-          var allow = false;
+          var allow = true;
 
           posix.setregid(options.gid);
           posix.setreuid(options.uid);
           
-          allow = fs.accessSync(script, FS.X_OK);
+          // access uses a strange exception-throwing return mode
+          try {
+            fs.accessSync(script, fs.X_OK);
+          } catch(e) {
+            allow = false;
+          }
           
           posix.setreuid(uid);
           posix.setregid(gid);
