@@ -19,19 +19,20 @@ var app = express();
  * Initialize environment
  */
 
-app.set('port', process.env.PORT || 3000);
-app.set('uri', process.env.URI || ('http://localhost:' + app.get('port')));
-app.set('cookie secret', process.env.COOKIE_SECRET || 'unsafe');
+app.set('port', process.env.SERVICE_PORT || 3000);
+app.set('uri', process.env.SERVICE_URI || ('http://localhost:' + app.get('port')));
+app.set('cookie secret', process.env.COOKIE_SECRET);
 app.set('root', process.env.ROOT || path.resolve(__dirname, '../../..') );
-app.set('root uid', process.env.ROOT_UID || '1');
-app.set('root secret', process.env.ROOT_SECRET || 'password');
+app.set('server uid', process.env.SERVER_UID);
+app.set('server username', process.env.SERVER_USERNAME);
+app.set('server secret', process.env.SERVER_SECRET);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 app.set('storage', storage);
-app.set('system path', process.env.SYSTEM_PATH || '/sbin/');
-app.set('swap', process.env.SWAP || (path.resolve(app.get('root'), 'var/run/kernel')));
-app.set('passwd', process.env.PASSWD || (path.resolve(app.get('root'), 'etc/passwd.json')));
-app.set('init', process.env.INIT || (path.resolve(app.get('root'), 'sbin/init')));
+app.set('system path', '/sbin/');
+app.set('swap', path.resolve(app.get('root'), 'var/run/kernel'));
+app.set('passwd', path.resolve(app.get('root'), 'etc/passwd.json'));
+app.set('init', path.resolve(app.get('root'), 'sbin/init'));
 app.set('trust proxy', 1) // trust first proxy, cookie-session
 
 switch(app.get('env')) {

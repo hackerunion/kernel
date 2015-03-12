@@ -44,20 +44,20 @@ module.exports = function(app) {
             return cb(err);
           }
   
-          var shadows = _.groupBy(shadows, function (s) { return s.toLowerCase(); });
-          
-          return cb(users.map(function(user) {
+          var shadows = _.indexBy(shadows, function (s) { return s.username.toLowerCase(); });
+
+          return cb(null, users.map(function(user) {
             var username = user.username.toLowerCase();
             var meta = null;
-  
+            
             // skip users without passwords
             if (!shadows[username] || !shadows[username].password) {
               return null;
             }
             
             // extract extra details from comment field
-            try { 
-              meta = JSON.parse(user.comments);
+            try {
+              meta = JSON.parse(new Buffer(user.comments, 'base64').toString('ascii'));
             } catch (e) {
               meta = { 'info': user.comments, 'uri': '', 'service': false };
             }
@@ -81,7 +81,7 @@ module.exports = function(app) {
     
   self.readPasswdForUser = function(username, cb) {
   	self.readPasswd(function(err, data) {
-  		var passwd = _.find(data || [], { 'username': username });
+  		var passwd = _.find(data || [], { 'username': username.toLowerCase() });
   
   		if (!passwd) {
   			return cb("User not found");

@@ -100,8 +100,8 @@ module.exports = function(app) {
           grant_type: 'password',
           username: username,
           password: password,
-          client_id: app.get('root uid'),
-          client_secret: app.get('root secret')
+          client_id: app.get('server uid'),
+          client_secret: app.get('server secret')
         },
       }, function (err, res, body) {
         if (err || res.statusCode != 200 || !('access_token' in body)) {

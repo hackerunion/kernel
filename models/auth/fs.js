@@ -12,7 +12,7 @@ module.exports = function(app) {
     storage.setItem('oauth.authorizedClientIds', {
         // password requests can only be issued by the root client (us)
         password: [
-					'1'
+			    app.get('server uid')
         ],
         refresh_token: [
           '*'
@@ -23,31 +23,6 @@ module.exports = function(app) {
       });
 
     return model; 
-    // --- avoid clearing our db every time we reload... ---
-    storage.setItem('oauth.clients', [
-        {
-          clientId: 'test',
-          clientSecret: 'password',
-          redirectUri: ''
-        },
-
-				{
-					clientId : 'root',
-					clientSecret: '',
-					redirectUri: '',
-					root: true
-				}
-    ]);
-
-   storage.setItem('oauth.users', [
-        {
-          id : '123',
-          username: 'testUser',
-          password: 'testPassword'
-        }
-   ]);
-
-   return model;
   };
   
   // Debug function to dump the state of the data stores
@@ -172,7 +147,7 @@ module.exports = function(app) {
   model.getUser = function (username, password, callback, noPass, byId) {
     // allow querying by other fields (namely uid)
     var field = byId ? 'uid' : 'username';
-
+    console.log("getUser", username, password, noPass, byId);
     app.core.readPasswd(function(err, passwd) {
       if (err) {
         return callback(false, false);
@@ -181,7 +156,7 @@ module.exports = function(app) {
       for(var i = 0, len = passwd.length; i < len; i++) {
         var elem = passwd[i];
         
-        if(elem[field] === username) {
+        if(elem[field] == username) {
           var user = {
             'id': elem.uid,
             'passwd': elem
@@ -191,7 +166,7 @@ module.exports = function(app) {
             return callback(false, user);
           }
 	        
-          return callback(false, (crypt(password, elem.password) === password) ? user : false);
+          return callback(false, (crypt(password, elem.password) === elem.password) ? user : false);
         }
       }
   
