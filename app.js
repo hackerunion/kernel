@@ -19,8 +19,8 @@ var app = express();
  * Initialize environment
  */
 
-app.set('port', process.env.SERVICE_PORT || 3000);
-app.set('uri', process.env.SERVICE_URI || ('http://localhost:' + app.get('port')));
+app.set('port', process.env.SERVER_PORT || 3000);
+app.set('uri', process.env.SERVER_URI || ('http://localhost:' + app.get('port')));
 app.set('cookie secret', process.env.COOKIE_SECRET);
 app.set('root', process.env.ROOT || path.resolve(__dirname, '../../..') );
 app.set('server uid', process.env.SERVER_UID);
@@ -165,7 +165,7 @@ app.all(RegExp("^(?!" + sbin + ")"),
   app.auth.authorise(),
   app.oauth.authorise(),
   app.core.passwd(),
-  app.core.spawn());
+  app.core.exec())
 
 /*
  * Testing views only visible during debugging

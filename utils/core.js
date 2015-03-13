@@ -120,15 +120,15 @@ module.exports = function(app) {
     }
   };
 
-  self.spawn = function(sudo) {
+  self.exec = function(sudo) {
     return function(req, res, next) {
-      var script = path.resolve(app.get('root'), path.normalize(req.path).slice(1));
+      var file = path.resolve(app.get('root'), path.normalize(req.path).slice(1));
       var options = {
         'cwd': app.get('root'),
         'stderr': res
       };
 
-      fs.stat(script, function(err, stats) {
+      fs.stat(file, function(err, stats) {
         if (err || !stats) {
           return next(err);
         }
@@ -142,23 +142,36 @@ module.exports = function(app) {
           // ensure file is executable to real user before suid/sgid check
           var uid = process.getuid();
           var gid = process.getgid();
-          var allow = true;
+          var exec = true;
+          var view = true;
 
           posix.setregid(options.gid);
           posix.setreuid(options.uid);
           
           // access uses a strange exception-throwing return mode
           try {
-            fs.accessSync(script, fs.X_OK);
+            fs.accessSync(file, fs.X_OK);
           } catch(e) {
-            allow = false;
+            exec = false;
           }
           
+          if (!exec) {
+            try {
+              fs.accessSync(file, fs.R_OK);
+            } catch(e) {
+              view = false;
+            }
+          }
+
           posix.setreuid(uid);
           posix.setregid(gid);
 
-          if (!allow) {
+          if (!exec && !read) {
             return next("Access denied (" + stats.mode + ")");
+          }
+
+          if (!exec) {
+            return res.sendFile(file);
           }
 
           if (stats.mode & SUID) {
@@ -175,7 +188,7 @@ module.exports = function(app) {
         return dom.on('error', function(err) {
           return next(err);
         }).run(function() { 
-          return cgi(script, options)(req, res, next);
+          return cgi(file, options)(req, res, next);
         });
      });
 
