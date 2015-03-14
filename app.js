@@ -83,6 +83,21 @@ app.oauth = oauthServer({
 });
 
 /*
+ * Shutdown server on signal.
+ */
+
+process.on('SIGTERM', function() {
+  var down = app.get('bios').halt();
+  
+  if (!down) {
+    console.error("HALT: " + err);
+    return;
+  }
+  
+  return process.kill(process.pid, 'SIGKILL');
+});
+
+/*
  * Handle oauth authentication requests.
  */
 
@@ -139,23 +154,6 @@ app.post(sbin + 'auth',
     next(null, req.body.allow === 'yes', req.session.user);
   })
 );
-
-/*
- * Halt the server (necessary to sync).
- */
-
-app.get(sbin + 'shutdown', function(req, res) {
-  var down = 1;//app.get('bios').halt();
-  
-  if (!down) {
-    console.error("HALT: " + err);
-    return res.sendStatus(500);
-  }
-  
-  res.sendStatus(200);
-  
-  return process.kill(process.pid, 'SIGKILL');
-});
 
 /*
  * CGI access to the server.
