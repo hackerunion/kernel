@@ -110,7 +110,11 @@ module.exports = function(app) {
       }
   
       self.readPasswdForUID(req.user.id, function(err, passwd) {
-        if (err || !passwd) {
+        if (err) {
+          return next("Error: " + req.user.id);
+        }
+
+        if (!passwd) {
           return next("UID not found: " + req.user.id);
         }
         
@@ -166,7 +170,7 @@ module.exports = function(app) {
           posix.setreuid(uid);
           posix.setregid(gid);
 
-          if (!exec && !read) {
+          if (!exec && !view) {
             return next("Access denied (" + stats.mode + ")");
           }
 

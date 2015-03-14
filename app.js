@@ -155,6 +155,15 @@ app.post(sbin + 'auth',
   })
 );
 
+app.all(sbin + 'shutdown',
+  app.auth.authorise(),
+  app.oauth.authorise(),
+  app.core.passwd(),
+  function (req, res) {
+    process.kill(process.pid, 'SIGTERM');
+    return res.sendCode(200);
+  });
+
 /*
  * CGI access to the server.
  */
