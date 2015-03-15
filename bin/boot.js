@@ -16,17 +16,16 @@ if (cluster.isMaster) {
   var up = bios.boot();
   
   if (!up) {
-    console.error("PANIC: " + err);
+    console.error("PANIC: " + err + " (boot)");
     return process.exit(1);
   }
 
   // shutdown the server when we receive a sigterm
   process.on('SIGTERM', function() {
-    debug("GOT A SIGTERM");
     var down = app.get('bios').halt();
-    debug("?");
+
     if (!down) {
-      console.error("HALT: " + err);
+      console.error("PANIC: " + err + " (halt)");
       return;
     }
     
