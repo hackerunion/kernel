@@ -20,6 +20,12 @@ if (cluster.isMaster) {
     return process.exit(1);
   }
 
+  // avoid dying until child kills us
+  process.on('SIGTERM', function() {
+    console.warn("Termination requested. Waiting for child...");
+  });
+
+
   // start server
   cluster.fork();
   
