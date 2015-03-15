@@ -83,21 +83,6 @@ app.oauth = oauthServer({
 });
 
 /*
- * Shutdown server on signal.
- */
-
-process.on('SIGTERM', function() {
-  var down = app.get('bios').halt();
-  
-  if (!down) {
-    console.error("HALT: " + err);
-    return;
-  }
-  
-  return process.kill(process.pid, 'SIGKILL');
-});
-
-/*
  * Handle oauth authentication requests.
  */
 

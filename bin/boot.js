@@ -20,9 +20,17 @@ if (cluster.isMaster) {
     return process.exit(1);
   }
 
-  // avoid dying until child kills us
+  // shutdown the server when we receive a sigterm
   process.on('SIGTERM', function() {
-    console.warn("Termination requested. Waiting for child...");
+    debug("GOT A SIGTERM");
+    var down = app.get('bios').halt();
+    debug("?");
+    if (!down) {
+      console.error("HALT: " + err);
+      return;
+    }
+    
+    return cluster.disconnect();
   });
 
 
@@ -30,9 +38,8 @@ if (cluster.isMaster) {
   cluster.fork();
   
   cluster.on('exit', function(s) {
-    if (s.process.signalCode == 'SIGKILL') {
-      console.warn("Shutdown received. Stopping...");
-      cluster.disconnect();
+    if (s.suicide || s.process.signalCode == 'SIGKILL') {
+      console.warn("Shutdown received. Time to sell the farm!");
       return;
     }
 
