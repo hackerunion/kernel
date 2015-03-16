@@ -1,6 +1,10 @@
 var basicAuth = require('basic-auth');
 var request = require('request');
+var debug = require('debug')('kernel');
 var _ = require('lodash');
+
+var INVALID_NAME = '_';
+var INVALID_PASS = '_';
 
 module.exports = function(app) {
   var self = {};
@@ -10,14 +14,7 @@ module.exports = function(app) {
   };
 
   self._reject = function(req, res, nuke) {
-    if (nuke) {
-      req.basic = false;
-      req.user = null;
-      req.session.user = null;
-    }
-    
     res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-    
     return res.sendStatus(401);
   };
 
@@ -40,19 +37,28 @@ module.exports = function(app) {
       var user = req.session.user;
       var getToken =  req.query.access_token;
       var postToken = req.body ? req.body.access_token : undefined;
-  
+      var req_get = _.bind(req.get, req);
       req.get = function(header) {
+        // only run this code if we successfully authenticated via basic
         if (header.toLowerCase() == 'authorization') {
           // always defer to explicit http tokens (basic-auth credentials are secondary to explicit tokens)
           // goes against spec ever so slightly
-          if (!user || !user.oauth || getToken !== undefined || postToken !== undefined) {
+          if (getToken !== undefined || postToken !== undefined) {
             return undefined;
           }
-  
-          return "Bearer " + user.oauth.access_token; 
+          
+          if (user && user.oauth) {
+            return "Bearer " + user.oauth.access_token; 
+          }
+
+          // this ensures oauth doesn't succeed (we're trying to prompt the user for a password)
+          if (req.basic == 'logout') {
+            req.basic = null;
+            return undefined;
+          }
         }
-    
-        return req.get(header);
+
+        return req_get(header);
       };
     
       next();
@@ -63,21 +69,13 @@ module.exports = function(app) {
     return function(req, res, next) {
       // only force logout if there is a user logged in (or requested)
       if (force || req.user || req.session.user) {
-        return self._reject(req, res, true);
+        req.basic = 'logout';
+        req.user = null;
+        req.session.user = null;
       }
       
       // otherwise, we're already logged out
       return next();
-    };
-  };
-  
-  self.guard = function(basic) {
-    return function(req, res, next) {
-      if ((req.session.user || req.user) && (!basic || req.basic)) {
-        return next();
-      }
-
-      self._reject(req, res);
     };
   };
   
@@ -92,9 +90,11 @@ module.exports = function(app) {
     }
   };
 
-  self.basic = function() {
+  self.basic = function(guest) {
     var oauthPasswordRequest = function(req, res, username, password, next) {
-      request.post(app.get('uri') + app.get('system path') + 'token', { 
+      request.post(app.common.requestURI(req, function(uri) {
+        uri.pathname = app.get('system path') + 'token';
+      }), { 
         json: true, 
         form: {
           grant_type: 'password',
@@ -125,11 +125,26 @@ module.exports = function(app) {
   
     return function (req, res, next) {
       var creds = basicAuth(req);
-      req.basic = false;      
+      req.basic = false;
 
       // if creds missing, prompt for auth
       if (!creds || !creds.name || !creds.pass) {
+        if (!guest) {
+          return next();
+        }
+
+        // allow undeclared users to login as guests
+        creds = { 'name': app.get('guest username'), 'pass': app.get('guest secret') };
+      }
+      
+      // basic is set to "null" when falling back to a guest login is not allowed
+      if (creds.name == INVALID_NAME && creds.pass == INVALID_PASS) {
+        req.basic = null;
         return next();
+      }
+      
+      if (creds.name == app.get('guest username') && creds.pass == app.get('guest secret')) {
+        req.basic = null;
       }
   
       return oauthPasswordRequest(req, res, creds.name, creds.pass, function(err, user) {
@@ -146,13 +161,26 @@ module.exports = function(app) {
     };
   };
 
-  self.authorise = function() {
+  self.authorise = function(guest) {
     // attempt basic auth + oauthification in one shot
     return function(req, res, next) {
-      self.basic()(req, res, function() {
+      self.basic(guest)(req, res, function() {
         self.oauthify()(req, res, next);
       });
     };
+  };
+
+  self.invalidateURI = function(req, pathname) {
+    return app.common.requestURI(req, function(uri) {
+      uri.pathname = pathname;
+      uri.auth = INVALID_NAME + ':' + INVALID_PASS;
+    });
+  };
+
+  self.basicURI = function(req, user, pass) {
+    return app.common.requestURI(req, function(uri) {
+      uri.auth = user + ':' + pass;
+    });
   };
   
   return self.init();

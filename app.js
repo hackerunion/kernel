@@ -1,3 +1,4 @@
+var debug = require('debug')('kernel');
 var express = require('express');
 var session = require('cookie-session');
 var path = require('path');
@@ -9,6 +10,7 @@ var bodyParser = require('body-parser');
 var oauthServer = require('oauth2-server');
 
 var routes = require('./routes/index');
+var common = require('./utils/common');
 var core = require('./utils/core');
 var auth = require('./utils/auth');
 var authModel = require('./models/auth/fs');
@@ -26,6 +28,10 @@ app.set('root', process.env.ROOT || path.resolve(__dirname, '../../..') );
 app.set('server uid', process.env.SERVER_UID);
 app.set('server username', process.env.SERVER_USERNAME);
 app.set('server secret', process.env.SERVER_SECRET);
+app.set('guest username', process.env.GUEST_USERNAME || 'server');
+app.set('guest secret', process.env.GUEST_SECRET || 'password');
+app.set('guest mode', app.get('guest username') && app.get('guest secret'));
+app.set('index file', process.env.INDEX_FILE || 'index.cgi');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 app.set('storage', storage);
@@ -33,7 +39,8 @@ app.set('system path', '/sbin/');
 app.set('swap', path.resolve(app.get('root'), 'var/run/kernel'));
 app.set('passwd', path.resolve(app.get('root'), 'etc/passwd.json'));
 app.set('init', path.resolve(app.get('root'), 'sbin/init'));
-app.set('trust proxy', 1) // trust first proxy, cookie-session
+app.set('www', path.resolve(app.get('root'), 'var/www'));
+app.set('trust proxy', 1);
 
 switch(app.get('env')) {
   case 'production':
@@ -71,6 +78,7 @@ app.use(session({
 storage.initSync({ dir: app.get('swap') });
 
 // helpers and middleware
+app.common = common(app);
 app.auth = auth(app);
 app.core = core(app);
 
@@ -89,16 +97,22 @@ app.oauth = oauthServer({
 app.all(sbin + 'token', app.oauth.grant());
 
 /*
- * Prompt for credentials and redirect to shell (login and logout are identical).
+ * Prompt for credentials and redirect to uri or home directory.
  */
 
-app.get(RegExp(sbin + 'login' + '|' + sbin + 'logout'), 
+app.get(sbin + 'logout',
   app.auth.logout(),
+  function(req, res, next) {
+    return res.redirect(app.auth.invalidateURI(req, sbin + 'login'));
+  }
+);
+
+app.get(sbin + 'login', 
   app.auth.authorise(),
   app.oauth.authorise(),
   app.core.passwd(),
   function(req, res, next) {
-    res.redirect(req.user.passwd.shell);
+    return res.redirect(req.user.passwd.uri || app.common.pathToURI(req.user.passwd.home));
   }
 );
 
@@ -144,17 +158,24 @@ app.all(sbin + 'shutdown',
   app.auth.authorise(),
   app.oauth.authorise(),
   app.core.passwd(),
-  function (req, res) {
-    process.kill(process.pid, 'SIGTERM');
-    return res.sendCode(200);
-  });
+  function (req, res, next) {
+    var pid = app.get('master pid');
+
+    if (pid === undefined) {
+      return res.sendStatus(500);
+    }
+
+    res.sendStatus(200);
+    return process.kill(pid, 'SIGTERM');
+  }
+);
 
 /*
  * CGI access to the server.
  */
 
 app.all(RegExp("^(?!" + sbin + ")"),
-  app.auth.authorise(),
+  app.auth.authorise(app.get('guest mode')),
   app.oauth.authorise(),
   app.core.passwd(),
   app.core.exec())

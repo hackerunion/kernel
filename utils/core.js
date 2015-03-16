@@ -1,3 +1,4 @@
+var debug = require('debug')('kernel');
 var _ = require('lodash');
 var fs = require('fs');
 var cgi = require('cgi');
@@ -82,9 +83,13 @@ module.exports = function(app) {
   self.readPasswdForUser = function(username, cb) {
   	self.readPasswd(function(err, data) {
   		var passwd = _.find(data || [], { 'username': username.toLowerCase() });
-  
+      
+      if (err) {
+  			return cb("Error: " + err);
+      }
+
   		if (!passwd) {
-  			return cb("User not found: " + username);
+  			return cb("Error: User \"" + username + "\" not found");
   		}
   
   		cb(null, passwd);
@@ -95,8 +100,12 @@ module.exports = function(app) {
   	self.readPasswd(function(err, data) {
   		var passwd = _.find(data || [], { 'uid': uid });
   
+      if (err) {
+  			return cb(err);
+      }
+
   		if (!passwd) {
-  			return cb("UID not found: " + uid);
+  			return cb("Error: UID " + uid + " not found");
   		}
   
   		cb(null, passwd);
@@ -111,11 +120,11 @@ module.exports = function(app) {
   
       self.readPasswdForUID(req.user.id, function(err, passwd) {
         if (err) {
-          return next("Error: " + req.user.id);
+          return next(err);
         }
 
         if (!passwd) {
-          return next("UID not found: " + req.user.id);
+          return next("Error: UID " + req.user.id + " not found");
         }
         
         req.user.passwd = passwd;
@@ -126,15 +135,28 @@ module.exports = function(app) {
 
   self.exec = function(sudo) {
     return function(req, res, next) {
-      var file = path.resolve(app.get('root'), path.normalize(req.path).slice(1));
+      var file = app.common.URItoPath(req.path);
+
+      debug("Mapping:", req.path, "=", file);
+
+      // sanitize the environment
       var options = {
         'cwd': app.get('root'),
-        'stderr': res
+        'stderr': res,
+        'env': {
+          'COOKIE_SECRET': '*',
+          'SERVER_SECRET': '*'
+        }
       };
 
       fs.stat(file, function(err, stats) {
-        if (err || !stats) {
+        if (err || !stats || !(stats.isFile() || stats.isDirectory())) {
           return next(err);
+        }
+
+        if (stats.isDirectory()) {
+          var index = app.common.pathToURI(path.join(file, app.get('index file')));
+          return res.redirect(index);
         }
 
         if (sudo) {
