@@ -137,8 +137,6 @@ module.exports = function(app) {
     return function(req, res, next) {
       var file = app.common.URItoPath(req.path);
 
-      debug("Mapping:", req.path, "=", file);
-
       // sanitize the environment
       var options = {
         'cwd': app.get('root'),
