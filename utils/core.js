@@ -143,7 +143,11 @@ module.exports = function(app) {
         'stderr': res,
         'env': {
           'COOKIE_SECRET': '*',
-          'SERVER_SECRET': '*'
+          'SERVER_SECRET': '*',
+          'SERVER_SECURE_KEY': '*',
+          'SERVER_SECURE_CERT': '*',
+          'USER': req.user.passwd.username,
+          'HOME': req.user.passwd.home
         }
       };
 

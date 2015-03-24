@@ -4,6 +4,9 @@ var fs = require('fs');
 var debug = require('debug')('kernel');
 var cluster = require('cluster');
 
+var http = require('http');
+var https = require('https');
+
 var app = require('../app');
 var bios = require('../init')(app);
 
@@ -64,6 +67,17 @@ if (process.env.SERVER_NO_INIT) {
   }
 }
 
-var server = app.listen(app.get('port'), function() {
-  debug('Kernel listening on port ' + server.address().port);
+var httpServer = http.createServer(app);
+var httpsServer = https.createServer({
+  key: fs.readFileSync(app.get('server key')),
+  cert: fs.readFileSync(app.get('server certificate')),
+  passphrase: 'password'
+}, app);
+
+httpServer.listen(app.get('port'), function() {
+  debug('Kernel listening for HTTP connections on port ' + httpServer.address().port);
+});
+
+httpsServer.listen(app.get('secure port'), function() {
+  debug('Kernel listening for HTTPS connections on port ' + httpsServer.address().port);
 });
