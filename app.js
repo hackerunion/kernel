@@ -31,8 +31,8 @@ app.set('server username', process.env.SERVER_USERNAME);
 app.set('server secret', process.env.SERVER_SECRET);
 app.set('server key', process.env.SERVER_SECURE_KEY);
 app.set('server certificate', process.env.SERVER_SECURE_CERT);
-app.set('guest username', process.env.GUEST_USERNAME || 'server');
-app.set('guest secret', process.env.GUEST_SECRET || 'password');
+app.set('guest username', process.env.GUEST_USERNAME || 'guest');
+app.set('guest secret', process.env.GUEST_SECRET || 'guest');
 app.set('guest mode', app.get('guest username') && app.get('guest secret'));
 app.set('index file', process.env.INDEX_FILE || 'index.cgi');
 app.set('views', path.join(__dirname, 'views'));
@@ -100,7 +100,7 @@ app.oauth = oauthServer({
 app.all(sbin + 'token', app.oauth.grant());
 
 /*
- * Prompt for credentials and redirect to uri or home directory.
+ * Invalidate credentials and prompt for login.
  */
 
 app.get(sbin + 'logout',
@@ -109,6 +109,10 @@ app.get(sbin + 'logout',
     return res.redirect(app.auth.invalidateURI(req, sbin + 'login'));
   }
 );
+
+/*
+ * Prompt for credentials and redirect to uri or home directory.
+ */
 
 app.get(sbin + 'login', 
   app.auth.authorise(),

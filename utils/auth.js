@@ -164,6 +164,8 @@ module.exports = function(app) {
   self.authorise = function(guest) {
     // attempt basic auth + oauthification in one shot
     return function(req, res, next) {
+      // reset this field so we're starting from scratch
+      req.basic = false;
       self.basic(guest)(req, res, function() {
         self.oauthify()(req, res, next);
       });
