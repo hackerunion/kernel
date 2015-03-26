@@ -15,7 +15,7 @@ module.exports = function(app) {
 
   self._reject = function(req, res, nuke) {
     res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-    return res.sendStatus(401);
+    return res.status(401).send('<code>Unable to authenticate. Continue as a <a href="/">guest</a>?</code>');
   };
 
   self.hideBasicHeader = function() {
@@ -126,10 +126,10 @@ module.exports = function(app) {
     return function (req, res, next) {
       var creds = basicAuth(req);
       req.basic = false;
-
+      
       // if creds missing, prompt for auth
       if (!creds || !creds.name || !creds.pass) {
-        if (!guest) {
+        if (req.session.user || !guest) {
           return next();
         }
 
@@ -164,8 +164,6 @@ module.exports = function(app) {
   self.authorise = function(guest) {
     // attempt basic auth + oauthification in one shot
     return function(req, res, next) {
-      // reset this field so we're starting from scratch
-      req.basic = false;
       self.basic(guest)(req, res, function() {
         self.oauthify()(req, res, next);
       });

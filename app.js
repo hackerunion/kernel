@@ -188,20 +188,17 @@ app.all(RegExp("^(?!" + sbin + ")"),
   app.core.exec())
 
 /*
- * Testing views only visible during debugging
+ * Testing utils.
  */
 
-if (!app.get('production')) {
-  app.get(sbin + 'dump',
-    app.auth.authorise(), 
-    app.oauth.authorise(),
-    app.core.passwd(),
-    
-    function(req, res) {
-      res.send({ 'user': req.user, 'session': req.session });
-    }
-  );
-}
+app.get(sbin + 'debug',
+  app.auth.authorise(),
+  app.oauth.authorise(),
+  app.core.passwd(),
+  function(req, res) {
+    res.send({ 'user': req.user, 'session': req.session });
+  }
+);
 
 /*
  * Error handling.
