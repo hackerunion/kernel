@@ -157,8 +157,7 @@ module.exports = function(app) {
         }
 
         if (stats.isDirectory()) {
-          var index = app.common.pathToURI(path.join(file, app.get('index file')));
-          return res.redirect(index);
+          return res.redirect(app.common.pathToURI(path.join(file, app.get('index file'))));
         }
 
         if (sudo) {

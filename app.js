@@ -35,6 +35,7 @@ app.set('guest username', process.env.GUEST_USERNAME || 'guest');
 app.set('guest secret', process.env.GUEST_SECRET || 'guest');
 app.set('guest mode', app.get('guest username') && app.get('guest secret'));
 app.set('index file', process.env.INDEX_FILE || 'index.cgi');
+app.set('index directory', process.env.INDEX_DIR || 'cgi-bin');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 app.set('storage', storage);
