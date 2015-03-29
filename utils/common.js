@@ -20,7 +20,7 @@ module.exports = function(app) {
   };
 
   self.pathToURI = function(p) {
-    return '/' + p.replace(RegExp('^/?' + path.join(app.get('root'), '/')), '');
+    return path.normalize(path.join('/', path.relative(app.get('root'), p)));
   };
 
   self.URItoPath = function(u) {

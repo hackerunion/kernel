@@ -6,6 +6,8 @@ var etc = require('etc-passwd');
 var path = require('path');
 var posix = require('posix');
 var domain = require('domain');
+var stream = require('stream');
+var querystring = require('querystring');
 
 var SUID = 2048;
 var SGID = 1024;
@@ -211,10 +213,18 @@ module.exports = function(app) {
         }
         
         var dom = domain.create();
-        
+        var body = new stream.Readable();
+
         return dom.on('error', function(err) {
           return next(err);
-        }).run(function() { 
+        }).run(function() {
+          // need to override pipe since bodyParser clobbers the initial stream
+          req.pipe = function(out) {
+            out.write(querystring.stringify(req.body), null, function() {
+              out.end();
+            });
+          };
+
           return cgi(file, options)(req, res, next);
         });
      });
