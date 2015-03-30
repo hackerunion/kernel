@@ -25,7 +25,7 @@ app.set('port', process.env.SERVER_PORT || 3000);
 app.set('secure port', process.env.SERVER_SECURE_PORT || 4000);
 app.set('uri', process.env.SERVER_URI || ('http://localhost:' + app.get('port')));
 app.set('cookie secret', process.env.COOKIE_SECRET);
-app.set('root', process.env.ROOT || path.resolve(__dirname, '../../..') );
+app.set('root', process.env.SERVER_ROOT || path.resolve(__dirname, '../../..') );
 app.set('server uid', process.env.SERVER_UID);
 app.set('server username', process.env.SERVER_USERNAME);
 app.set('server secret', process.env.SERVER_SECRET);
