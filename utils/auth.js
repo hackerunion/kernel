@@ -15,7 +15,11 @@ module.exports = function(app) {
 
   self._reject = function(req, res, nuke) {
     res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-    return res.status(401).send('<code>Unable to authenticate. Continue as a <a href="/">guest</a>?</code>');
+    res.status(401);
+    
+    if (app.get('guest mode')) {
+      res.send('<code>Unable to authenticate. Continue as a <a href="' + self.guestURI(req) + '">guest</a>?</code>');
+    }
   };
 
   self.hideBasicHeader = function() {
@@ -38,6 +42,7 @@ module.exports = function(app) {
       var getToken =  req.query.access_token;
       var postToken = req.body ? req.body.access_token : undefined;
       var req_get = _.bind(req.get, req);
+      
       req.get = function(header) {
         // only run this code if we successfully authenticated via basic
         if (header.toLowerCase() == 'authorization') {
@@ -168,6 +173,12 @@ module.exports = function(app) {
         self.oauthify()(req, res, next);
       });
     };
+  };
+
+  self.guestURI = function(req) {
+    return app.common.requestURI(req, function(uri) {
+      uri.auth = app.get('guest username') + ':' + app.get('guest secret');
+    });
   };
 
   self.invalidateURI = function(req, pathname) {
