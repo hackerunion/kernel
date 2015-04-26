@@ -9,7 +9,6 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var oauthServer = require('oauth2-server');
 
-var routes = require('./routes/index');
 var common = require('./utils/common');
 var core = require('./utils/core');
 var auth = require('./utils/auth');

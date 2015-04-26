@@ -159,7 +159,7 @@ module.exports = function(app) {
         }
 
         if (stats.isDirectory()) {
-          return res.redirect(app.common.pathToURI(path.join(file, app.get('index file'))));
+          return res.redirect(app.common.pathToURI(path.join(file, app.get('index file'))) + (req.query ? '?' + querystring.stringify(req.query) : ''));
         }
 
         if (sudo) {
