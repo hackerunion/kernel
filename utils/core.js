@@ -142,6 +142,7 @@ module.exports = function(app) {
       // sanitize the environment
       var options = {
         'cwd': app.get('root'),
+        'timeout': parseInt(app.get('timeout')),
         'stderr': res,
         'env': {
           'COOKIE_SECRET': '*',
@@ -164,6 +165,8 @@ module.exports = function(app) {
 
         if (sudo) {
           // run as server: this should never happen externally
+          options.timeout = null;
+
         } else {
           options.uid = parseInt(req.user.passwd.uid);
           options.gid = parseInt(req.user.passwd.gid);
