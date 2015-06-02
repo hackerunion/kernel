@@ -1,6 +1,7 @@
 var debug = require('debug')('kernel');
 var express = require('express');
 var session = require('cookie-session');
+var compression = require('compression');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
@@ -62,6 +63,7 @@ var sbin = app.get('system path');
  * Install base middleware.
  */
 
+app.use(compression()); 
 app.use(favicon(__dirname + '/public/images/favicon.ico'));
 app.use(logger('dev'));
 app.use(bodyParser.json());
