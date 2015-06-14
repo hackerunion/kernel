@@ -149,6 +149,7 @@ module.exports = function(app) {
           'SERVER_SECRET': '*',
           'SERVER_SECURE_KEY': '*',
           'SERVER_SECURE_CERT': '*',
+          'HTTP_AUTHORIZATION': '*',
           'USER': req.user.passwd.username,
           'HOME': req.user.passwd.home
         }
