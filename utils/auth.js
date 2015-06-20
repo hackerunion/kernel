@@ -76,6 +76,7 @@ module.exports = function(app) {
       if (force || req.user || req.session.user) {
         req.basic = 'logout';
         req.user = null;
+        req.session.last = req.session.user;
         req.session.user = null;
       }
       
@@ -130,6 +131,9 @@ module.exports = function(app) {
   
     return function (req, res, next) {
       var creds = basicAuth(req);
+      var last = req.session.last;
+      
+      req.session.last = null;
       req.basic = false;
       
       // if creds missing, prompt for auth
@@ -142,12 +146,21 @@ module.exports = function(app) {
         creds = { 'name': app.get('guest username'), 'pass': app.get('guest secret') };
       }
       
-      // basic is set to "null" when falling back to a guest login is not allowed
+      // Note: in the following code, we reset basic to "null" to indicate failure (i.e., retry)
+
+      // if the last user to logout is the same as the user logging in, prompt for password
+      if (last && last.passwd && last.passwd.username == creds.name) {
+        req.basic = null;
+        return next();
+      }
+      
+      // if given our (explicitly) invalid credentials, prompt for password
       if (creds.name == INVALID_NAME && creds.pass == INVALID_PASS) {
         req.basic = null;
         return next();
       }
       
+      // if guest mode is enabled, allow guest username and password
       if (creds.name == app.get('guest username') && creds.pass == app.get('guest secret')) {
         req.basic = null;
       }

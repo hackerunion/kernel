@@ -36,7 +36,8 @@ app.set('guest secret', process.env.SERVER_GUEST_SECRET || 'guest');
 app.set('guest mode', app.get('guest username') && app.get('guest secret'));
 app.set('index file', process.env.INDEX_FILE || 'index.cgi');
 app.set('index directory', process.env.INDEX_DIR || 'cgi-bin');
-app.set('index directory', process.env.CGI_TIMEOUT || '15000');
+app.set('cgi timeout', process.env.CGI_TIMEOUT || '15000');
+app.set('kernel hacker', process.env.KERNEL_HACKER);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 app.set('storage', storage);
@@ -109,7 +110,7 @@ app.all(sbin + 'token', app.oauth.grant());
 app.get(sbin + 'logout',
   app.auth.logout(),
   function(req, res, next) {
-    return res.redirect(app.auth.invalidateURI(req, sbin + 'login'));
+    return res.redirect(sbin + 'login');
   }
 );
 

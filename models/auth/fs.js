@@ -1,4 +1,5 @@
 var crypt = require('crypt3');
+var debug = require('debug')('kernel');
 
 module.exports = function(app) {
   var model = {};
@@ -161,6 +162,12 @@ module.exports = function(app) {
             'id': elem.uid,
             'passwd': elem
           };
+
+          // HACK: password checks get in the way when hacking the kernel
+          if (app.get('kernel hacker')) {
+            debug("KERNEL_HACKER: not checking passwords!");
+            noPass = true;
+          }
 
           if (noPass) {
             return callback(false, user);

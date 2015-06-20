@@ -142,7 +142,7 @@ module.exports = function(app) {
       // sanitize the environment
       var options = {
         'cwd': app.get('root'),
-        'timeout': parseInt(app.get('timeout')),
+        'timeout': parseInt(app.get('cgi timeout')),
         'stderr': res,
         'env': {
           'COOKIE_SECRET': '*',
