@@ -147,7 +147,6 @@ module.exports = function(app) {
       }
       
       // Note: in the following code, we reset basic to "null" to indicate failure (i.e., retry)
-
       // if the last user to logout is the same as the user logging in, prompt for password
       if (last && last.passwd && last.passwd.username == creds.name) {
         req.basic = null;
@@ -206,6 +205,6 @@ module.exports = function(app) {
       uri.auth = user + ':' + pass;
     });
   };
-  
+
   return self.init();
 };

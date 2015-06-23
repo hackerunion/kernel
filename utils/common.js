@@ -9,8 +9,8 @@ module.exports = function(app) {
     return self;
   };
 
-  self.requestURI = function(req, func) {
-    var uri = url.parse(req.protocol + '://' + req.get('host') + req.originalUrl);
+  self.requestURI = function(req, func, orig) {
+    var uri = url.parse(req.protocol + '://' + req.get('host') + (orig || req.originalUrl));
     
     if (func) {
       func(uri);
