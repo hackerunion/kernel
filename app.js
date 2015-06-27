@@ -25,6 +25,7 @@ app.set('port', process.env.SERVER_PORT || 3000);
 app.set('secure port', process.env.SERVER_SECURE_PORT || 4000);
 app.set('uri', process.env.SERVER_URI || ('http://localhost:' + app.get('port')));
 app.set('cookie secret', process.env.COOKIE_SECRET);
+app.set('cookie amnesia', true);
 app.set('root', process.env.SERVER_ROOT || path.resolve(__dirname, '../../..') );
 app.set('server uid', process.env.SERVER_UID);
 app.set('server username', process.env.SERVER_USERNAME);
@@ -73,7 +74,7 @@ app.use(cookieParser());
 app.use(require('less-middleware')(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
-  secret: app.get('cookie secret'),
+  secret: app.get('cookie secret') + (app.get('cookie amnesia') ? Math.random() : ''),
   signed: true
 }));
 

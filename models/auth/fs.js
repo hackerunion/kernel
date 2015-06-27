@@ -6,6 +6,12 @@ module.exports = function(app) {
   var storage = app.get('storage');
   
   model.init = function() {
+    // Every time the server restarts, these containers are emptied
+    // This causes all oauth tokens to become invalid
+    // Cookie amnesia causes server to forget old sessions and tokens on restart
+    // Without an old token, special case allows guest to skip password prompt (GOOD)
+    // With an old token, special case is skipped, token fails oauth, and password prompt is shown (BAD)
+
     storage.setItem('oauth.authCodes', []);
     storage.setItem('oauth.accessTokens', []);
     storage.setItem('oauth.refreshTokens', []);
