@@ -125,7 +125,12 @@ app.get(sbin + 'login',
   app.core.passwd(),
   function(req, res, next) {
     var path = req.query.next || req.user.passwd.uri || app.common.pathToURI(req.user.passwd.home);
-    
+
+    // strict: disallow guest login
+    if (app.get('guest mode') && ('strict' in req.query) && req.user.passwd.username == app.get('guest username')) {
+      path = sbin + 'logout';
+    }
+
     // remove the basic auth parameters to avoid warnings about credential-stealing
     return res.redirect(app.common.requestURI(req, null, path));
   }
