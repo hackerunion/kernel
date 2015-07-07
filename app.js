@@ -124,7 +124,7 @@ app.get(sbin + 'login',
   app.oauth.authorise(),
   app.core.passwd(),
   function(req, res, next) {
-    var path = req.user.passwd.uri || app.common.pathToURI(req.user.passwd.home);
+    var path = req.query.next || req.user.passwd.uri || app.common.pathToURI(req.user.passwd.home);
     
     // remove the basic auth parameters to avoid warnings about credential-stealing
     return res.redirect(app.common.requestURI(req, null, path));
