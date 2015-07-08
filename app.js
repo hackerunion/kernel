@@ -124,10 +124,14 @@ app.get(sbin + 'login',
   app.oauth.authorise(),
   app.core.passwd(),
   function(req, res, next) {
-    var path = req.query.next || req.user.passwd.uri || app.common.pathToURI(req.user.passwd.home);
+    var path = req.query.next || req.session.next || req.user.passwd.uri || app.common.pathToURI(req.user.passwd.home);
+    
+    // clear cached "next" value
+    req.session.next = null;
 
     // strict: disallow guest login
     if (app.get('guest mode') && ('strict' in req.query) && req.user.passwd.username == app.get('guest username')) {
+      req.session.next = req.query.next;
       path = sbin + 'logout';
     }
 

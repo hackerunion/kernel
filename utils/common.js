@@ -25,7 +25,7 @@ module.exports = function(app) {
 
   self.URItoPath = function(u) {
     return path.join(app.get('root'), u);
-  }
+  };
 
   return self.init();
 };
