@@ -14,8 +14,24 @@ var prepareWorker = function(worker) {
   worker.send({ 'pid': process.pid });
 };
 
+var boot = function() {
+  // initialize the server (blocking)
+  var up = bios.boot();
+  
+  if (!up) {
+    console.error("PANIC: " + err + " (boot)");
+    return process.exit(1);
+  }
+};
+
 if (process.env.SERVER_NO_INIT) {
   console.warn("The server is running without init for local development.");
+
+} else if (process.env.SERVER_ONLY_INIT) {
+  console.warn("The server will run init and then stop for local development.");
+  
+  boot();
+  process.exit(0);
 
 } else {
   if (cluster.isMaster) {
@@ -23,14 +39,8 @@ if (process.env.SERVER_NO_INIT) {
       console.warn("The kernel will misbehave unless it's run as root.");
     }
     
-    // initialize the server (blocking)
-    var up = bios.boot();
-    
-    if (!up) {
-      console.error("PANIC: " + err + " (boot)");
-      return process.exit(1);
-    }
-  
+    boot();
+
     // shutdown the server when we receive a sigterm
     process.on('SIGTERM', function() {
       var down = app.get('bios').halt();

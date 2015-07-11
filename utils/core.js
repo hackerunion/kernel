@@ -143,7 +143,7 @@ module.exports = function(app) {
       var options = {
         'cwd': app.get('root'),
         'timeout': parseInt(app.get('cgi timeout')),
-        'stderr': res,
+        'stderr': process.stderr,
         'env': {
           'COOKIE_SECRET': '*',
           'SERVER_SECRET': '*',
@@ -228,7 +228,6 @@ module.exports = function(app) {
               out.end();
             });
           };
-
           return cgi(file, options)(req, res, next);
         });
      });
