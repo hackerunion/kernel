@@ -234,8 +234,7 @@ app.use(function(req, res, next) {
 });
 
 app.use(function(err, req, res, next) {
-    debug('Caught error: ' + err.message);
-    debug(JSON.stringify(err.stack, null, 2));
+    debug('Caught error: ' + err.stack);
 
     if (!res.headersSent) {
       res.status(err.status || 500);
