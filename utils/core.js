@@ -136,9 +136,31 @@ module.exports = function(app) {
   };
 
   self.exec = function(sudo) {
+    var _lookupUsername = function(uid) {
+      return posix.getpwnam(uid).name;
+    };
+
+    var _enterUser = function(state) {
+      posix.initgroups(state.username, state.gid);
+      posix.setregid(state.gid);
+      posix.setreuid(state.uid);
+    };
+
+    var _exitUser = function(state) {
+      posix.setreuid(state.uid);
+      posix.setregid(state.gid);
+      posix.initgroups(state.username, state.gid);
+    };
+
+    var _userState = function(uid, gid) {
+      return { 'uid': uid, 'gid': gid, 'username': _lookupUsername(uid) };
+    };
+
     return function(req, res, next) {
       var file = app.common.URItoPath(req.path);
-      
+      var prev = _userState(process.getuid(), process.getgid());
+      var curr = prev;
+
       // sanitize the environment
       var options = {
         'cwd': app.get('root'),
@@ -164,24 +186,19 @@ module.exports = function(app) {
           return res.redirect(app.common.pathToURI(path.join(file, app.get('index file'))) + (req.query ? '?' + querystring.stringify(req.query) : ''));
         }
 
+        // run as server: this should never happen externally
         if (sudo) {
-          // run as server: this should never happen externally
           options.timeout = null;
 
         } else {
-          options.uid = parseInt(req.user.passwd.uid);
-          options.gid = parseInt(req.user.passwd.gid);
+          curr = _userState(parseInt(req.user.passwd.uid), parseInt(req.user.passwd.gid));
 
           // ensure file is executable to real user before suid/sgid check
-          var uid = process.getuid();
-          var gid = process.getgid();
           var exec = true;
           var view = true;
-
-          posix.setregid(options.gid);
-          posix.setreuid(options.uid);
           
-          // access uses a strange exception-throwing return mode
+          _enterUser(curr);
+
           try {
             fs.accessSync(file, fs.X_OK);
           } catch(e) {
@@ -195,10 +212,9 @@ module.exports = function(app) {
               view = false;
             }
           }
-
-          posix.setreuid(uid);
-          posix.setregid(gid);
-
+          
+          _exitUser(prev);
+          
           if (!exec && !view) {
             return next("Access denied (" + stats.mode + ")");
           }
@@ -208,11 +224,11 @@ module.exports = function(app) {
           }
 
           if (stats.mode & SUID) {
-            options.uid = stats.uid;
+            curr.uid = stats.uid;
           }
   
           if (stats.mode & SGID) {
-            options.gid = stats.gid;
+            curr.gid = stats.gid;
           }
         }
         
@@ -220,6 +236,7 @@ module.exports = function(app) {
         var body = new stream.Readable();
 
         return dom.on('error', function(err) {
+          _exitUser(prev);
           return next(err);
         }).run(function() {
           // need to override pipe since bodyParser clobbers the initial stream
@@ -228,7 +245,12 @@ module.exports = function(app) {
               out.end();
             });
           };
-          return cgi(file, options)(req, res, next);
+
+          _enterUser(curr);
+          return cgi(file, options)(req, res, function() {
+            _exitUser(prev);
+            return next(req, res);
+          });
         });
      });
 
