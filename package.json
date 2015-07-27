@@ -32,6 +32,7 @@
     "etc-passwd": "^0.1.1",
     "express": "^4.10.0",
     "jade": "~1.6.0",
+    "kexec": "^1.2.0",
     "less-middleware": "1.0.x",
     "lodash": "^3.6.0",
     "mocha": "^2.2.1",

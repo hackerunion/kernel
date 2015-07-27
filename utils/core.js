@@ -135,7 +135,7 @@ module.exports = function(app) {
     }
   };
 
-  self.exec = function(sudo) {
+  self.exec = function(sudo, raw) {
     var _lookupUsername = function(uid) {
       return posix.getpwnam(uid).name;
     };
@@ -239,6 +239,12 @@ module.exports = function(app) {
           _exitUser(prev);
           return next(err);
         }).run(function() {
+          // use exec handler to inject extra functionality
+          if (!raw) {
+            options.args = [ file ];
+            file = app.get('exec handler');
+          }
+
           // need to override pipe since bodyParser clobbers the initial stream
           req.pipe = function(out) {
             out.write(querystring.stringify(req.body), null, function() {

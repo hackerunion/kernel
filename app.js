@@ -44,6 +44,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 app.set('storage', storage);
 app.set('system path', '/sbin/');
+app.set('exec handler', path.resolve(app.get('root'), 'usr/src/kernel/bin/exec.js'));
 app.set('swap', path.resolve(app.get('root'), 'var/run/kernel'));
 app.set('passwd', path.resolve(app.get('root'), 'etc/passwd.json'));
 app.set('init', path.resolve(app.get('root'), 'sbin/init'));
